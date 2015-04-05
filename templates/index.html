@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bulb</title>
+    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/spacelab/bootstrap.min.css" rel="stylesheet" />
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  </head>
+  <body>
+    
+    <div class="container-fluid">
+      <div class="row">
+	<div class="col-xs-12">
+
+	  <h1>Bulb Master</h1>
+	  	 
+	  <form class="form-horizontal">
+	    <div class="form-group">
+	      <label class="col-sm-2">Power</label>
+	      <div class="col-sm-10">
+		<a href="{{ url_for('on') }}" class="btn btn-default" data-ajax>On</a>
+		<a href="{{ url_for('off') }}" class="btn btn-default" data-ajax>Off</a>
+	      </div>
+	    </div>
+	    <div class="form-group">
+	      <label class="col-sm-2" for="color">Colour</label>
+	      <div class="col-sm-10">
+		<input id="color" type="color" data-ajax="{{ url_for('colour', colour='ffffff')|replace('ffffff/','') }}" />
+	      </div>
+	    </div>
+	    <div class="form-group">
+	      <label class="col-sm-2" for="brightness">Brightness</label>
+	      <div class="col-sm-10">
+		<input id="brightness" type="range" min="10" max="255" data-ajax="{{ url_for('warm', brightness=255)|replace('255/','') }}" />
+	      </div>
+	    </div>
+	  </form>
+	  
+	</div>
+      </div>
+    </div>
+      
+    <script src="//code.jquery.com/jquery.js" type="text/javascript"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js" type="text/javascript"></script>
+
+    <script>
+      $(document).ready(function() {
+          $('a[data-ajax]').on('click', function(e) {
+              console.log('Calling: ' + $(this).attr('href'));
+              $.getJSON($(this).attr('href'), function(data) {
+                  console.log(data);
+              });
+              e.preventDefault();
+          });
+
+          $('input[data-ajax]').on('change', function(e) {
+              var call = $(this).data('ajax') + $(this).val().replace('#','');
+              console.log('Calling: ' + call);
+              $.getJSON(call, function(data) {
+                  console.log(data);
+              });
+          });
+      });
+    </script>
+  </body>
+</html>
