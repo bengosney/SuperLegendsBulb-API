@@ -1,17 +1,31 @@
 #!/usr/bin/env python
 
 from flask import Flask, jsonify, url_for, render_template
-from subprocess import call
+from subprocess import call, Popen
+from vedis import Vedis
 import re
 
 app = Flask(__name__)
 
 class bulb:
     def __init__(self):
-        self.base = '/usr/local/bin/bulb'
+        self.path_base = '/usr/local/bin/'
+        self.base = self.path_base + 'bulb'
+        self.dimm_base = self.path_base + 'dimm_bulb'
+        self.ved = Vedis('store.ved')
+
+    def __del__(self):
+        self.ved.close()
 
     def run(self, arg):
         call(['sudo', self.base, arg])
+
+    def dimm(self, level, inc):
+        Popen(['sudo', self.dimm_base, '-l ' + str(level), '-i ' + str(inc)])
+
+    def undimm(self, level, inc):
+        Popen(['sudo', self.dimm_base, '-l ' + str(level), '-i ' + str(inc), '-r'])
+    
 
 def list_routes():
     import urllib
@@ -41,15 +55,33 @@ def off():
     com.run('-d')
     return jsonify({ 'success' : True })
 
+@app.route('/api/v1.0/dimm/<int:level>/<int:increment>/')
+def dimm(level, increment):
+    """
+    Dimm the bulb with the increment
+    """
+    
+    com = bulb()
+    com.dimm(level, increment)
+
+    return jsonify({ 'success' : True })
+
+@app.route('/api/v1.0/brighten/<int:level>/<int:increment>/')
+def brighten(level, increment):
+    """
+    Brightens the bulb with the increment
+    """
+    
+    com = bulb()
+    com.undimm(level, increment)
+
+    return jsonify({ 'success' : True })
+
 @app.route('/api/v1.0/warm/<int:brightness>/')
-def warm(brightness=None):
+def warm(brightness):
     """
     Set the bulb to warm mode and set the brightness (10-255)
     """
-
-    if colour == None:
-        return jsonify({'success' : False, 'error' : 'no brightness given'})
-
 
     com = bulb()
     val = max(min(brightness, 255), 0)
@@ -64,12 +96,10 @@ def warm(brightness=None):
             })
 
 @app.route('/api/v1.0/colour/<string:colour>/')
-def colour(colour=None):
+def colour(colour):
     """
     Set the colour of the bulb in hex
     """
-    if colour == None:
-        return jsonify({'success' : False, 'error' : 'no colour given'})
     
     com = bulb()
     com.run(''.join(['-c ', colour]))
